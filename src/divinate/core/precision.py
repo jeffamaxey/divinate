@@ -11,12 +11,10 @@ def set_precision(p: int) -> int:
     :rtype: int
     """
 
-    if int(p) > 0:
-        global PRECISION
-        PRECISION = int(p)
-        return PRECISION
-    else:
+    if p <= 0:
         raise ValueError("Cannot set negative precision.", p)
+    global PRECISION
+    return p
 
 
 def get_precision() -> int:

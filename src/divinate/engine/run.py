@@ -53,37 +53,38 @@ class RunConfig:
 
     def run(self):
         # Handle data reading
-        if self.modelpoint_file is not None:
-            data = DictReader(open(self.modelpoint_file, "r"))
+        if self.modelpoint_file is None:
+            return
+        data = DictReader(open(self.modelpoint_file, "r"))
 
-            # Define output location
-            output_file = self.results_location / f"{self.label}_results.csv"
+        # Define output location
+        output_file = self.results_location / f"{self.label}_results.csv"
 
-            # Delete results if already exists
-            if os.path.exists(output_file):
-                os.remove(output_file)
+        # Delete results if already exists
+        if os.path.exists(output_file):
+            os.remove(output_file)
 
-            # Loop over rows and convert into a pydantic datclass
-            # The data definition is provided by the user
-            for row in data:
-                modelpoint = self.modelpoint_definition(**row)
+        # Loop over rows and convert into a pydantic datclass
+        # The data definition is provided by the user
+        for row in data:
+            modelpoint = self.modelpoint_definition(**row)
 
-                result = self.handler(
-                    modelpoint,
-                    modelpoint_definition=self.modelpoint_definition,
-                    modelpoint_file=self.modelpoint_file,
-                    table_location=self.table_location,
-                    result_location=self.results_location,
-                    runconfig_label=self.label,
+            result = self.handler(
+                modelpoint,
+                modelpoint_definition=self.modelpoint_definition,
+                modelpoint_file=self.modelpoint_file,
+                table_location=self.table_location,
+                result_location=self.results_location,
+                runconfig_label=self.label,
+            )
+
+            # Convert dict to df
+            result = pd.DataFrame.from_dict([result])
+
+            if self.results_location is not None:
+                result.to_csv(
+                    output_file,
+                    mode="a",
+                    index=False,
+                    header=not os.path.exists(output_file),
                 )
-
-                # Convert dict to df
-                result = pd.DataFrame.from_dict([result])
-
-                if self.results_location is not None:
-                    result.to_csv(
-                        output_file,
-                        mode="a",
-                        index=False,
-                        header=not os.path.exists(output_file),
-                    )
